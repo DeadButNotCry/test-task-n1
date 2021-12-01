@@ -20,18 +20,18 @@ namespace backend.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> getAllUsersAsync()
+        public async Task<IActionResult> GetAllUsersAsync()
         {
-            var users = await _userService.getAllUsersAsync();
+            var users = await _userService.GetAllUsersAsync();
             return Ok(users);
         }
 
         [HttpPost]
-        public async Task<IActionResult> createUsersAsync(List<User> users)
+        public async Task<IActionResult> CreateUsersAsync(List<User> users)
         {
             try
             {
-                await _userService.createUsers(users);
+                await _userService.CreateUsers(users);
                 return Ok();
             }
             catch (Exception e)
@@ -43,5 +43,27 @@ namespace backend.Controllers
             }
         }
 
+        [HttpDelete]
+        public async Task<IActionResult> DeleteAllUsersAsync()
+        {
+            await _userService.DeleteAllUsers();
+            return NoContent();
+        }
+
+        [HttpGet("LifeTimeHistogram")]
+        public async Task<IActionResult> GetHistogram()
+        {
+            var histogramData = await _userService.GetHistogramData();
+            return Ok(histogramData);
+        }
+
+        [HttpGet("RollingRetention")]
+        public IActionResult GetRollingRetention()
+        {
+            return Ok(new
+            {
+                Percent = _userService.GetRollingRetention()
+            });
+        }
     }
 }

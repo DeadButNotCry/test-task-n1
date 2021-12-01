@@ -18,15 +18,14 @@ namespace backend.Services
             _context = context;
         }
 
-        public async Task createUsers(List<User> users)
+        public async Task CreateUsers(List<User> users)
         {
             foreach (var user in users)
             {
-                if (user.LastActivity < user.Registration || user.Registration > DateTime.Now)
-                {
-                    throw new ArgumentException("Проверьте правильность введенных дат.");
-                }
-                if ((await _context.Users.FirstOrDefaultAsync(u => u.Id == user.Id) != null))
+                // if (user.LastActivity < user.Registration || user.Registration > DateTime.Now)
+                // {
+                //     throw new ArgumentException("Проверьте правильность введенных дат.");
+                // }
                 if ((await _context.Users.FirstOrDefaultAsync(u => u.Id == user.Id) != null))
                 {
                     throw new ArgumentException($"Пользователь с Id:{user.Id} уже существует");
@@ -36,26 +35,47 @@ namespace backend.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task deleteAllUsers()
+        public async Task DeleteAllUsers()
         {
             _context.Users.RemoveRange(_context.Users.ToList());
             await _context.SaveChangesAsync();
         }
 
 
-        public async Task<List<User>> getAllUsersAsync()
+        public async Task<List<User>> GetAllUsersAsync()
         {
             return await _context.Users.ToListAsync();
         }
 
-        public Task<Dictionary<int, int>> getHistogramData()
+        public async Task<Dictionary<int, int>> GetHistogramData()
         {
-            throw new NotImplementedException();
+            var histogramData = new Dictionary<int, int>();
+            var users = await _context.Users.ToListAsync();
+            foreach (var user in users)
+            {
+                if (histogramData.ContainsKey(user.LifeTime))
+                {
+                    histogramData[user.LifeTime]++;
+                }
+                else
+                {
+                    histogramData[user.LifeTime] = 1;
+                }
+            }
+            return histogramData;
         }
 
-        public Task<int> getRollingRetention(int x = 7)
+        public double GetRollingRetention(int x = 7)
         {
-            throw new NotImplementedException();
+            var countOfReturnedUsers = _context.Users.Where(u => u.LastActivity - u.Registration >= TimeSpan.FromDays(x)).Count();
+            var countOfRegUsers = _context.Users.Where(u => DateTime.Now - u.Registration >= TimeSpan.FromDays(x)).Count();
+            if (countOfRegUsers == 0)
+            {
+                return 0.0;
+            }
+            var result = ((double)countOfReturnedUsers / countOfRegUsers) * 100;
+
+            return Math.Round(result, 3);
         }
     }
 }
